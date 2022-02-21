@@ -10,7 +10,7 @@
 
 This project is a ReactJS user interface that communicates with the Logz.io API in order to offer an improved log browsing experience.
 
-Go to https://better-logzui-ui.onrender.com for the demo.
+Go to https://better-logzio-ui.onrender.com for the demo.
 
 # License 
 
