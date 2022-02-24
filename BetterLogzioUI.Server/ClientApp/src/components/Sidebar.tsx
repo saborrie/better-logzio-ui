@@ -1,9 +1,9 @@
-import { Typography } from "@mui/material";
+import { Checkbox, Paper, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import { useQuery } from "react-query";
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useSearch } from "../services/api";
-
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
 function Sidebar() {
   const { timeRange } = useParams();
   const search = useSearch();
@@ -28,63 +28,107 @@ function Sidebar() {
     );
   }
 
-  const selectedTypes = searchParams.getAll("type");
+  const selectedItems: Record<string, string[]> = {
+    type: searchParams.getAll("type"),
+    level: searchParams.getAll("level"),
+  };
 
   return (
-    <>
-      {aggregationsQuery.data?.aggregations.byType?.buckets.map((typeBucket) => {
-        const active = selectedTypes.includes(typeBucket.key);
+    <Box sx={{ p: 8 }}>
+      {["type", "level"].map((agg) => (
+        <Paper
+          sx={{
+            mb: 8,
+            overflow: "hidden",
 
-        return (
+            // border: (theme) => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <Box
-            key={typeBucket.key}
-            onClick={() => {
-              if (active) {
-                setSearchParams(
-                  { type: selectedTypes.filter((x) => x != typeBucket.key) },
-                  { replace: true }
-                );
-              } else {
-                setSearchParams({ type: [...selectedTypes, typeBucket.key] }, { replace: true });
-              }
-            }}
             sx={{
-              p: 1,
-              position: "relative",
-              cursor: "pointer",
+              p: 2,
+              pl: 4,
+              pr: 4,
+              borderTop: (theme) => `2px solid ${theme.palette.primary.dark}`,
+
               borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-              background: (theme) => (active ? theme.palette.grey[900] : ""),
-              ":hover": {
-                background: (theme) => theme.palette.grey[900],
-                "& .only": {
-                  display: "block",
-                },
-              },
             }}
           >
-            {typeBucket.key} ({typeBucket.doc_count})
-            <Box
-              className="only"
-              sx={{
-                display: "none",
-                position: "absolute",
-                right: 8,
-                top: 0,
-                p: 1,
-                m: "1px",
-                ":hover": { textDecoration: "underline" },
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSearchParams({ type: [typeBucket.key] }, { replace: true });
-              }}
-            >
-              Only
-            </Box>
+            <Typography variant="overline" color="text.secondary">
+              {agg}
+            </Typography>
           </Box>
-        );
-      })}
-    </>
+          {aggregationsQuery.data?.aggregations[agg]?.buckets.map((bucket) => {
+            const selectedBuckets = selectedItems[agg];
+
+            const active = selectedBuckets.includes(bucket.key);
+
+            return (
+              <Box
+                key={bucket.key}
+                onClick={() => {
+                  if (active) {
+                    setSearchParams(
+                      { ...selectedItems, [agg]: selectedBuckets.filter((x) => x != bucket.key) },
+                      { replace: true }
+                    );
+                  } else {
+                    setSearchParams(
+                      { ...selectedItems, [agg]: [...selectedBuckets, bucket.key] },
+                      { replace: true }
+                    );
+                  }
+                }}
+                sx={{
+                  p: 2,
+                  pl: 4,
+                  pr: 4,
+                  position: "relative",
+                  cursor: "pointer",
+                  overflow: "hidden",
+                  borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                  // background: (theme) => (active ? theme.palette.grey[900] : ""),
+                  ":hover": {
+                    background: (theme) => theme.palette.grey[900],
+                    "& .only": {
+                      display: "block",
+                    },
+                  },
+                  ":last-child": {
+                    borderBottom: "none",
+                  },
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <Box sx={{ mr: 2, flexShrink: 0 }}>
+                  {active && <CheckBoxIcon sx={{ verticalAlign: "bottom" }} />}
+                </Box>
+                {bucket.key} ({bucket.doc_count})
+                <Box
+                  className="only"
+                  sx={{
+                    display: "none",
+                    position: "absolute",
+                    right: 8,
+                    top: 0,
+                    p: 1,
+                    m: "1px",
+                    ":hover": { textDecoration: "underline" },
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSearchParams({ ...selectedItems, [agg]: [bucket.key] }, { replace: true });
+                  }}
+                >
+                  Only
+                </Box>
+              </Box>
+            );
+          })}
+        </Paper>
+      ))}
+    </Box>
   );
 }
 

@@ -16,9 +16,15 @@ export function useSearch() {
           size: 0,
           sort: [{ "@timestamp": "desc" }],
           aggs: {
-            byType: {
+            type: {
               terms: {
                 field: "type",
+                size: 50,
+              },
+            },
+            level: {
+              terms: {
+                field: "Level",
                 size: 50,
               },
             },
@@ -59,6 +65,13 @@ export function useScroll() {
         filterES.push({
           terms: {
             type: [...filters.type],
+          },
+        });
+      }
+      if (filters.level && filters.level.length > 0) {
+        filterES.push({
+          terms: {
+            Level: [...filters.level],
           },
         });
       }
@@ -162,4 +175,5 @@ interface AggResult {}
 
 interface Filters {
   type?: string[];
+  level?: string[];
 }

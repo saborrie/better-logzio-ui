@@ -16,6 +16,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { format } from "date-fns";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import { orange } from "@mui/material/colors";
@@ -30,6 +31,7 @@ import TimePicker from "../components/TimePicker";
 import { useParams, useSearchParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import FilterTags from "../components/FilterTags";
+import FieldTable from "../components/FieldTable";
 
 const drawerWidth = 600;
 const minDrawerWidth = "50%";
@@ -38,8 +40,9 @@ function LogsPage() {
   const { timeRange } = useParams();
   const [searchParams] = useSearchParams();
   const selectedTypes = searchParams.getAll("type");
+  const selectedLevels = searchParams.getAll("level");
 
-  const [open, setOpen] = React.useState<number | null>(null);
+  const [open, setOpen] = React.useState<any | null>(null);
 
   const theme = useTheme();
 
@@ -71,9 +74,9 @@ function LogsPage() {
     hasNextPage,
     refetch,
   } = useInfiniteQuery(
-    ["logs", timeRange, selectedTypes],
+    ["logs", timeRange, selectedTypes, selectedLevels],
     async ({ pageParam = undefined }) => {
-      return await scroll(timeRange, { type: selectedTypes }, pageParam);
+      return await scroll(timeRange, { type: selectedTypes, level: selectedLevels }, pageParam);
     },
     {
       getNextPageParam: (lastGroup, groups) =>
@@ -121,8 +124,8 @@ function LogsPage() {
       const item = items[virtualRow.index];
       return (
         <Row
-          onClick={() => setOpen((x) => (x === virtualRow.index ? null : virtualRow.index))}
-          active={open === virtualRow.index}
+          onClick={() => setOpen((x: any) => (x?._id === item._id ? null : item))}
+          active={open?._id === item._id}
           key={virtualRow.index}
           style={style}
         >
@@ -195,6 +198,7 @@ function LogsPage() {
     rowVirtualizer.virtualItems,
     timeRange,
     selectedTypes,
+    selectedLevels,
   ]);
 
   return (
@@ -289,6 +293,12 @@ function LogsPage() {
         >
           {open !== null && (
             <>
+              <Box
+                sx={{
+                  backgroundColor: getLevelColour(open?._source),
+                  height: 8,
+                }}
+              ></Box>
               <Box sx={{ p: 8 }}>
                 <Box sx={{ display: "flex", mb: 12, alignItems: "center" }}>
                   <Paper
@@ -297,36 +307,43 @@ function LogsPage() {
                       pl: 4,
                       pr: 4,
                       pb: 0,
-                      backgroundColor: getLevelColour(items[open]?._source),
-                      color: theme.palette.getContrastText(getLevelColour(items[open]?._source)),
+                      backgroundColor: getLevelColour(open?._source),
+                      color: theme.palette.getContrastText(getLevelColour(open?._source)),
                     }}
                   >
                     <Typography variant="overline">
-                      {items[open]?._source?.Level || items[open]?._source?.level}
+                      {open?._source?.Level || open?._source?.level}
                     </Typography>
                   </Paper>
                   <Typography sx={{ ml: 4 }}>
-                    {items[open]?._source?.["@timestamp"] &&
-                      format(
-                        Date.parse(items[open]?._source?.["@timestamp"]),
-                        "MMM dd HH:mm:ss.SSS",
-                        {}
-                      )}
+                    {open?._source?.["@timestamp"] &&
+                      format(Date.parse(open?._source?.["@timestamp"]), "MMM dd HH:mm:ss.SSS", {})}
                   </Typography>
+                  <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "flex-end" }}>
+                    <IconButton onClick={() => setOpen(null)}>
+                      <CloseIcon />
+                    </IconButton>
+                  </Box>
                 </Box>
                 <Paper sx={{ p: 8, mb: 4 }}>
-                  {items[open]?._source?.RenderedMessage ??
-                    items[open]?._source?.msg ??
-                    items[open]?._source?.message}
+                  {open?._source?.RenderedMessage ?? open?._source?.msg ?? open?._source?.message}
                 </Paper>
+
+                {((x) =>
+                  x && (
+                    <Paper sx={{ p: 8, mb: 4, whiteSpace: "pre-wrap", maxWidth: "100%" }}>
+                      {x}
+                    </Paper>
+                  ))(open?._source?.Exception ?? open?._source?.exception)}
+
                 <Box sx={{ display: "flex", mb: 12 }}>
                   <Paper sx={{ p: 8, flex: 1 }}>
                     <Typography variant="overline">Type</Typography>
-                    <Typography variant="body1">{items[open]?._source?.type}</Typography>
+                    <Typography variant="body1">{open?._source?.type}</Typography>
                   </Paper>
                 </Box>
 
-                <pre>{JSON.stringify(items[open], null, 2)}</pre>
+                {open?._source && <FieldTable data={open?._source} />}
               </Box>
             </>
           )}

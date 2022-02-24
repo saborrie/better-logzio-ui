@@ -3,19 +3,30 @@ import { useSearchParams } from "react-router-dom";
 
 function FilterTags() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const selectedTypes = searchParams.getAll("type");
+
+  const selectedItems: Record<string, string[]> = {
+    type: searchParams.getAll("type"),
+    level: searchParams.getAll("level"),
+  };
 
   return (
     <>
-      {selectedTypes.map((type) => (
-        <Chip
-          key={type}
-          sx={{ ml: 2 }}
-          label={`Type: ${type}`}
-          onDelete={() =>
-            setSearchParams({ type: selectedTypes.filter((x) => x != type) }, { replace: true })
-          }
-        />
+      {["type", "level"].map((group) => (
+        <>
+          {selectedItems[group].map((tag) => (
+            <Chip
+              key={tag}
+              sx={{ ml: 2 }}
+              label={`${group}: ${tag}`}
+              onDelete={() =>
+                setSearchParams(
+                  { ...selectedItems, [group]: selectedItems[group].filter((x) => x != tag) },
+                  { replace: true }
+                )
+              }
+            />
+          ))}
+        </>
       ))}
     </>
   );
