@@ -71,7 +71,7 @@ export function useScroll() {
       if (filters.level && filters.level.length > 0) {
         filterES.push({
           terms: {
-            Level: [...filters.level],
+            level: [...filters.level],
           },
         });
       }
