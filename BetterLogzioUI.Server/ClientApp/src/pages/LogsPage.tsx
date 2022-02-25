@@ -172,7 +172,7 @@ function LogsPage() {
             variant="body1"
             sx={{ overflow: "hidden", whiteSpace: "no-wrap", height: "100%" }}
           >
-            {item._source?.RenderedMessage ?? item._source?.msg ?? item._source?.message}
+            {getMessage(item._source)}
           </Typography>
         </Row>
       );
@@ -311,9 +311,7 @@ function LogsPage() {
                       color: theme.palette.getContrastText(getLevelColour(open?._source)),
                     }}
                   >
-                    <Typography variant="overline">
-                      {open?._source?.Level || open?._source?.level}
-                    </Typography>
+                    <Typography variant="overline">{getLevel(open?._source)}</Typography>
                   </Paper>
                   <Typography sx={{ ml: 4 }}>
                     {open?._source?.["@timestamp"] &&
@@ -325,16 +323,14 @@ function LogsPage() {
                     </IconButton>
                   </Box>
                 </Box>
-                <Paper sx={{ p: 8, mb: 4 }}>
-                  {open?._source?.RenderedMessage ?? open?._source?.msg ?? open?._source?.message}
-                </Paper>
+                <Paper sx={{ p: 8, mb: 4 }}>{getMessage(open?._source)}</Paper>
 
                 {((x) =>
                   x && (
                     <Paper sx={{ p: 8, mb: 4, whiteSpace: "pre-wrap", maxWidth: "100%" }}>
                       {x}
                     </Paper>
-                  ))(open?._source?.Exception ?? open?._source?.exception)}
+                  ))(getException(open?._source))}
 
                 <Box sx={{ display: "flex", mb: 12 }}>
                   <Paper sx={{ p: 8, flex: 1 }}>
@@ -378,6 +374,18 @@ function Row({ style, active, onClick, children }: any) {
       {children}
     </Box>
   );
+}
+
+function getMessage(source?: any) {
+  return source?.["@m"] ?? source?.RenderedMessage ?? source?.msg ?? source?.message;
+}
+
+function getException(source?: any) {
+  return source?.["@x"] ?? source?.Exception ?? source?.exception;
+}
+
+function getLevel(source?: any) {
+  return source?.Level ?? source?.level;
 }
 
 export default LogsPage;

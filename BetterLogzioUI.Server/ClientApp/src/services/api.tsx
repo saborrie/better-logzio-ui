@@ -24,7 +24,7 @@ export function useSearch() {
             },
             level: {
               terms: {
-                field: "Level",
+                field: "level",
                 size: 50,
               },
             },
