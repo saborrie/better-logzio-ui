@@ -27,16 +27,19 @@ import { Scrollbars } from "react-custom-scrollbars";
 
 import { useScroll, QueryResult } from "../services/api";
 import { useInfiniteQuery } from "react-query";
+import AccountPicker from "../components/AccountPicker";
 import TimePicker from "../components/TimePicker";
 import { useParams, useSearchParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import FilterTags from "../components/FilterTags";
 import FieldTable from "../components/FieldTable";
+import { useToken } from "../services/auth";
 
 const drawerWidth = 600;
 const minDrawerWidth = "50%";
 
 function LogsPage() {
+  const token = useToken();
   const { timeRange } = useParams();
   const [searchParams] = useSearchParams();
   const selectedTypes = searchParams.getAll("type");
@@ -74,7 +77,7 @@ function LogsPage() {
     hasNextPage,
     refetch,
   } = useInfiniteQuery(
-    ["logs", timeRange, selectedTypes, selectedLevels],
+    ["logs", token, timeRange, selectedTypes, selectedLevels],
     async ({ pageParam = undefined }) => {
       return await scroll(timeRange, { type: selectedTypes, level: selectedLevels }, pageParam);
     },
@@ -223,6 +226,7 @@ function LogsPage() {
             >
               <PlayArrowIcon />
             </IconButton>
+            <AccountPicker />
             <TimePicker />
             <FilterTags />
 

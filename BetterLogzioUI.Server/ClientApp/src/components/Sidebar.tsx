@@ -4,12 +4,14 @@ import { useQuery } from "react-query";
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useSearch } from "../services/api";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import { useToken } from "../services/auth";
 function Sidebar() {
   const { timeRange } = useParams();
+  const token = useToken();
   const search = useSearch();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const aggregationsQuery = useQuery(["search", timeRange], async () => {
+  const aggregationsQuery = useQuery(["search", token, timeRange], async () => {
     return await search(timeRange);
   });
 
@@ -20,7 +22,7 @@ function Sidebar() {
       </Typography>
     );
   }
-  if (aggregationsQuery.isError) {
+  if (aggregationsQuery.isError || aggregationsQuery.data?.aggregations === null) {
     return (
       <Typography variant="body2" color="error">
         Error: {aggregationsQuery.error}
@@ -58,7 +60,7 @@ function Sidebar() {
               {agg}
             </Typography>
           </Box>
-          {aggregationsQuery.data?.aggregations[agg]?.buckets.map((bucket) => {
+          {aggregationsQuery.data?.aggregations?.[agg]?.buckets.map((bucket) => {
             const selectedBuckets = selectedItems[agg];
 
             const active = selectedBuckets.includes(bucket.key);
